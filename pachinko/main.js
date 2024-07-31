@@ -29,7 +29,7 @@ l
 l
 l
 l
-  `     // d: divider
+  `     // d: wall
 ];
 
 window.G = {
@@ -43,8 +43,7 @@ window.G = {
   GRAVITY: 0.1,
   BOUNCE_FACTOR: 0.7,
   FRICTION: 0.99,
-  FLOOR_HEIGHT: 10,
-  DIVIDER_WIDTH: 1
+  WALL_HEIGHT: 20
 };
 
 options = {
@@ -60,21 +59,20 @@ let balls;
 let pegs;
 /** @type {{pos: Vector, score: number}[]} */
 let buckets;
-/** @type {{start: Vector, end: Vector}[]} */
-let dividers;
+/** @type {Vector[]} */
+let walls;
 
 function update() {
   if (!ticks) {
     balls = [];
-    pegs = times(G.PEG_COUNT, () => vec(rnd(10, G.WIDTH - 10), rnd(20, G.HEIGHT - G.FLOOR_HEIGHT - 20)));
+    pegs = times(G.PEG_COUNT, () => vec(rnd(10, G.WIDTH - 10), rnd(20, G.HEIGHT - 30)));
     buckets = times(G.BUCKET_COUNT, (i) => ({
-      pos: vec(10 + (G.WIDTH - 20) * i / (G.BUCKET_COUNT - 1), G.HEIGHT - G.FLOOR_HEIGHT / 2),
+      pos: vec(5 + (G.WIDTH - 10) * i / (G.BUCKET_COUNT - 1), G.HEIGHT - 5),
       score: rndi(1, 5)
     }));
-    dividers = times(G.BUCKET_COUNT - 1, (i) => ({
-      start: vec(20 + (G.WIDTH - 40) * (i + 1) / (G.BUCKET_COUNT - 1), G.HEIGHT - G.FLOOR_HEIGHT),
-      end: vec(20 + (G.WIDTH - 40) * (i + 1) / (G.BUCKET_COUNT - 1), G.HEIGHT)
-    }));
+    walls = times(G.BUCKET_COUNT - 1, (i) => 
+      vec(5 + (G.WIDTH - 10) * (i + 1) / (G.BUCKET_COUNT - 1), G.HEIGHT - G.WALL_HEIGHT / 2)
+    );
   }
 
   // Drop new ball
@@ -109,6 +107,17 @@ function update() {
     });
 
     // Collision with walls
+    walls.forEach(w => {
+      if (Math.abs(b.pos.x - w.x) < G.BALL_RADIUS && 
+          b.pos.y > G.HEIGHT - G.WALL_HEIGHT - G.BALL_RADIUS) {
+        play("hit");
+        const overlapX = G.BALL_RADIUS - Math.abs(b.pos.x - w.x);
+        b.pos.x += overlapX * Math.sign(b.pos.x - w.x);
+        b.vel.x *= -G.BOUNCE_FACTOR;
+      }
+    });
+
+    // Collision with side walls
     if (b.pos.x < G.BALL_RADIUS) {
       b.pos.x = G.BALL_RADIUS;
       b.vel.x *= -G.BOUNCE_FACTOR;
@@ -117,26 +126,14 @@ function update() {
       b.vel.x *= -G.BOUNCE_FACTOR;
     }
 
-    // Collision with floor
-    if (b.pos.y > G.HEIGHT - G.FLOOR_HEIGHT - G.BALL_RADIUS) {
-      b.pos.y = G.HEIGHT - G.FLOOR_HEIGHT - G.BALL_RADIUS;
-      b.vel.y *= -G.BOUNCE_FACTOR;
+    // Check if ball reached bottom
+    if (b.pos.y > G.HEIGHT) {
+      balls.splice(i, 1);
     }
-
-    // Collision with dividers
-    dividers.forEach(d => {
-      if (b.pos.y > d.start.y - G.BALL_RADIUS && 
-          Math.abs(b.pos.x - d.start.x) < G.BALL_RADIUS + G.DIVIDER_WIDTH / 2) {
-        b.pos.x = d.start.x + (G.BALL_RADIUS + G.DIVIDER_WIDTH / 2) * Math.sign(b.pos.x - d.start.x);
-        b.vel.x *= -G.BOUNCE_FACTOR;
-        play("hit");
-      }
-    });
 
     // Check if ball entered a bucket
     buckets.forEach(bucket => {
-      if (b.pos.y > G.HEIGHT - G.FLOOR_HEIGHT && 
-          Math.abs(b.pos.x - bucket.pos.x) < 10) {
+      if (b.pos.y > G.HEIGHT - 10 && Math.abs(b.pos.x - bucket.pos.x) < 5) {
         play("coin");
         addScore(bucket.score);
         balls.splice(i, 1);
@@ -157,16 +154,14 @@ function update() {
   color("red");
   buckets.forEach(b => {
     char("c", b.pos);
-    text(b.score.toString(), b.pos.x - 2, G.HEIGHT - G.FLOOR_HEIGHT - 5);
+    text(b.score.toString(), b.pos.x - 2, G.HEIGHT - 12);
   });
 
-  // Draw floor
-  color("light_black");
-  rect(0, G.HEIGHT - G.FLOOR_HEIGHT, G.WIDTH, G.FLOOR_HEIGHT);
-
-  // Draw dividers
-  color("light_black");
-  dividers.forEach(d => {
-    rect(d.start.x - G.DIVIDER_WIDTH / 2, d.start.y, G.DIVIDER_WIDTH, G.HEIGHT - d.start.y);
+  // Draw walls
+  color("light_green");
+  walls.forEach(w => {
+    times(G.WALL_HEIGHT, (i) => {
+      char("d", w.x, G.HEIGHT - i - 1);
+    });
   });
 }

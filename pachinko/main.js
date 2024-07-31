@@ -21,15 +21,7 @@ cccccc
 rrrrrr
 rrrrrr
 rrrrrr
-  `,    // c: bucket
-  `
-l
-l
-l
-l
-l
-l
-  `     // d: wall
+  `     // c: bucket
 ];
 
 window.G = {
@@ -42,8 +34,7 @@ window.G = {
   PEG_RADIUS: 2,
   GRAVITY: 0.1,
   BOUNCE_FACTOR: 0.7,
-  FRICTION: 0.99,
-  WALL_HEIGHT: 20
+  FRICTION: 0.99
 };
 
 options = {
@@ -59,8 +50,6 @@ let balls;
 let pegs;
 /** @type {{pos: Vector, score: number}[]} */
 let buckets;
-/** @type {Vector[]} */
-let walls;
 
 function update() {
   if (!ticks) {
@@ -70,9 +59,6 @@ function update() {
       pos: vec(5 + (G.WIDTH - 10) * i / (G.BUCKET_COUNT - 1), G.HEIGHT - 5),
       score: rndi(1, 5)
     }));
-    walls = times(G.BUCKET_COUNT - 1, (i) => 
-      vec(5 + (G.WIDTH - 10) * (i + 1) / (G.BUCKET_COUNT - 1), G.HEIGHT - G.WALL_HEIGHT / 2)
-    );
   }
 
   // Drop new ball
@@ -98,26 +84,17 @@ function update() {
         const dist = Math.sqrt(distSq);
         const overlap = minDist - dist;
         
+        // Separate the ball from the peg
         diff.normalize();
         b.pos.add(vec(diff).mul(overlap));
         
+        // Calculate new velocity
         const dotProduct = b.vel.x * diff.x + b.vel.y * diff.y;
         b.vel.sub(vec(diff).mul(2 * dotProduct)).mul(G.BOUNCE_FACTOR);
       }
     });
 
     // Collision with walls
-    walls.forEach(w => {
-      if (Math.abs(b.pos.x - w.x) < G.BALL_RADIUS && 
-          b.pos.y > G.HEIGHT - G.WALL_HEIGHT - G.BALL_RADIUS) {
-        play("hit");
-        const overlapX = G.BALL_RADIUS - Math.abs(b.pos.x - w.x);
-        b.pos.x += overlapX * Math.sign(b.pos.x - w.x);
-        b.vel.x *= -G.BOUNCE_FACTOR;
-      }
-    });
-
-    // Collision with side walls
     if (b.pos.x < G.BALL_RADIUS) {
       b.pos.x = G.BALL_RADIUS;
       b.vel.x *= -G.BOUNCE_FACTOR;
@@ -155,13 +132,5 @@ function update() {
   buckets.forEach(b => {
     char("c", b.pos);
     text(b.score.toString(), b.pos.x - 2, G.HEIGHT - 12);
-  });
-
-  // Draw walls
-  color("light_green");
-  walls.forEach(w => {
-    times(G.WALL_HEIGHT, (i) => {
-      char("d", w.x, G.HEIGHT - i - 1);
-    });
   });
 }

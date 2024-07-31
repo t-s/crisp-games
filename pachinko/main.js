@@ -29,7 +29,12 @@ window.G = {
   HEIGHT: 150,
   BALL_SPEED: 0.5,
   PEG_COUNT: 40,
-  BUCKET_COUNT: 5
+  BUCKET_COUNT: 5,
+  BALL_RADIUS: 2,
+  PEG_RADIUS: 2,
+  GRAVITY: 0.1,
+  BOUNCE_FACTOR: 0.7,
+  FRICTION: 0.99
 };
 
 options = {
@@ -64,22 +69,38 @@ function update() {
 
   // Update ball positions and check collisions
   balls.forEach((b, i) => {
+    b.vel.y += G.GRAVITY;
+    b.vel.mul(G.FRICTION);
     b.pos.add(b.vel);
-    b.vel.y += 0.02; // Gravity
 
     // Collision with pegs
     pegs.forEach(p => {
-      if (b.pos.distanceTo(p) < 4) {
+      const diff = vec(b.pos.x - p.x, b.pos.y - p.y);
+      const distSq = diff.x * diff.x + diff.y * diff.y;
+      const minDist = G.BALL_RADIUS + G.PEG_RADIUS;
+      
+      if (distSq < minDist * minDist) {
         play("hit");
-        const angle = b.pos.angleTo(p);
-        b.vel.addWithAngle(angle, 0.3);
-        b.vel.mul(0.8);
+        const dist = Math.sqrt(distSq);
+        const overlap = minDist - dist;
+        
+        // Separate the ball from the peg
+        diff.normalize();
+        b.pos.add(vec(diff).mul(overlap));
+        
+        // Calculate new velocity
+        const dotProduct = b.vel.x * diff.x + b.vel.y * diff.y;
+        b.vel.sub(vec(diff).mul(2 * dotProduct)).mul(G.BOUNCE_FACTOR);
       }
     });
 
     // Collision with walls
-    if (b.pos.x < 0 || b.pos.x > G.WIDTH) {
-      b.vel.x *= -1;
+    if (b.pos.x < G.BALL_RADIUS) {
+      b.pos.x = G.BALL_RADIUS;
+      b.vel.x *= -G.BOUNCE_FACTOR;
+    } else if (b.pos.x > G.WIDTH - G.BALL_RADIUS) {
+      b.pos.x = G.WIDTH - G.BALL_RADIUS;
+      b.vel.x *= -G.BOUNCE_FACTOR;
     }
 
     // Check if ball reached bottom

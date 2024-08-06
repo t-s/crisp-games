@@ -11,7 +11,7 @@ llllll
 llllll
  llll
   ll
-  `,  // a: ball
+  `,  // a: ball (now using 'l' for black)
   `
   cc
  cccc
@@ -117,7 +117,7 @@ function update() {
       }
     });
 
-    color("light_blue");
+    color("black");  // Changed to black
     char("a", b.pos);
   });
 

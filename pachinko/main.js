@@ -28,7 +28,7 @@ window.G = {
   WIDTH: 100,
   HEIGHT: 150,
   BALL_SPEED: 0.5,
-  PEG_COUNT: 40,
+  PEG_COUNT: 25,
   BUCKET_COUNT: 5,
   BALL_RADIUS: 2,
   PEG_RADIUS: 2,
@@ -123,7 +123,7 @@ function update() {
     // Add 'BARKOV' text under the ball
     color("black");
     text("BARKOV", b.pos.x - 9, b.pos.y + 5, {
-      scale: {x: 0.5, y: 0.5}
+      scale: {x: 0.75, y: 0.75}
     });
   });
 

@@ -18,8 +18,8 @@ llllll
 cccccc
   `,    // b: peg
   `
-rrrrrr
-rrrrrr
+r    r
+r    r
 rrrrrr
   `     // c: bucket
 ];

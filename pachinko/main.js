@@ -11,7 +11,7 @@ llllll
 llllll
  llll
   ll
-  `,  // a: ball (now using 'l' for black)
+  `,  // a: ball (using 'l' for black)
   `
   cc
  cccc
@@ -117,8 +117,14 @@ function update() {
       }
     });
 
-    color("black");  // Changed to black
+    color("black");
     char("a", b.pos);
+    
+    // Add 'BARKOV' text under the ball
+    color("black");
+    text("BARKOV", b.pos.x - 9, b.pos.y + 5, {
+      scale: {x: 0.5, y: 0.5}
+    });
   });
 
   // Draw pegs
